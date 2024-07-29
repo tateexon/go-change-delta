@@ -39,23 +39,20 @@ func GetGoModChangesFromDiff(lines bytes.Buffer) ([]string, error) {
 	return packages, nil
 }
 
-func GetChangedGoPackagesFromDiff(out bytes.Buffer, projectPath string, excludes []string, fileGraph map[string]string) ([]string, error) {
+func GetChangedGoPackagesFromDiff(out bytes.Buffer, projectPath string, excludes []string, fileMap map[string][]string) ([]string, error) {
 	changedFiles := strings.Split(out.String(), "\n")
 
 	// Filter out non-Go files and directories and embeds
-	changedPackages := make(map[string]struct{})
+	changedPackages := make(map[string]bool)
 	for _, file := range changedFiles {
-		if file == "" {
+		if file == "" || !strings.HasPrefix(file, projectPath) || shouldExclude(excludes, file) {
 			continue
 		}
-		if strings.HasSuffix(file, ".go") && !shouldExclude(excludes, file) && strings.HasPrefix(file, projectPath) {
-			// get the import path from the file path
-			importPath := fileGraph[file]
-			changedPackages[importPath] = struct{}{}
-		}
-		// TODO: embeds else if {
 
-		// }
+		// if the changed file is in the fileMap then we add it to the changed packages
+		for _, importPath := range fileMap[file] {
+			changedPackages[importPath] = true
+		}
 	}
 
 	// Convert map keys to slice

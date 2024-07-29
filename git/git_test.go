@@ -33,21 +33,20 @@ func TestGetChangedGoPackagesFromDiff(t *testing.T) {
 	input, err := utils.FileToBytesBuffer("../testdata/gitdiff.txt")
 	require.NoError(t, err, "Failed to load diff file")
 
-	fileGraph := map[string]string{
-		"cmd/cmd.go":      "abc",
-		"git/git.go":      "def",
-		"git/git_test.go": "efg",
-		"golang/mod.go":   "hij",
-		"utils/utils.go":  "klm",
+	fileMap := map[string][]string{
+		"cmd/cmd.go":        {"abc"},        // will match
+		"abc/def.go":        {"def"},        // won't match
+		"golang/mod.go":     {"hij"},        // won't match but embed will
+		"golang/embed.json": {"hij", "nop"}, // embed match with multiple places embedding
+		"utils/utils.go":    {"klm"},        // will match but excluded
 	}
-	packages, err := GetChangedGoPackagesFromDiff(input, "", []string{"utils"}, fileGraph)
+	packages, err := GetChangedGoPackagesFromDiff(input, "", []string{"utils"}, fileMap)
 	require.NoError(t, err, "Failed to get diff changes")
 
 	expected := []string{
 		"abc",
-		"def",
-		"efg",
 		"hij",
+		"nop",
 	}
 	verifySliceItemsPresent(t, expected, packages)
 }

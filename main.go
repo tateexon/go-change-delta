@@ -38,14 +38,14 @@ func main() {
 	includeTestDeps := flag.Bool("t", true, "Should we include test dependencies. Default is true")
 	flag.Parse()
 
-	config := SetConfig(branch, projectPath, excludes, levels, includeTestDeps)
+	config := setConfig(branch, projectPath, excludes, levels, includeTestDeps)
 
-	goList, gitDiff, gitModDiff := MakeExecCalls(config)
+	goList, gitDiff, gitModDiff := makeExecCalls(config)
 
-	Run(config, goList, gitDiff, gitModDiff)
+	run(config, goList, gitDiff, gitModDiff)
 }
 
-func SetConfig(branch, projectPath, excludes *string, levels *int, includeTestDeps *bool) *Config {
+func setConfig(branch, projectPath, excludes *string, levels *int, includeTestDeps *bool) *Config {
 	if *branch == "" {
 		log.Fatalf("Branch is required")
 	}
@@ -66,54 +66,63 @@ func SetConfig(branch, projectPath, excludes *string, levels *int, includeTestDe
 	}
 }
 
-func Run(config *Config, goList, gitDiff, gitModDiff *cmd.Output) {
+func run(config *Config, goList, gitDiff, gitModDiff *cmd.Output) {
 	packages, err := golang.ParsePackages(goList.Stdout)
 	if err != nil {
 		log.Fatalf("Error parsing packages: %v", err)
 	}
 
-	fileGraph := golang.GetGoFileMap(packages, config.IncludeTestDeps)
+	fileMap := golang.GetGoFileMap(packages, config.IncludeTestDeps)
 
 	var changedPackages []string
-	changedPackages, err = git.GetChangedGoPackagesFromDiff(gitDiff.Stdout, config.ProjectPath, config.Excludes, fileGraph)
+	changedPackages, err = git.GetChangedGoPackagesFromDiff(gitDiff.Stdout, config.ProjectPath, config.Excludes, fileMap)
 	if err != nil {
 		log.Fatalf("Error getting changed packages: %v", err)
 	}
 
-	modChangedPackages, err := git.GetGoModChangesFromDiff(gitModDiff.Stdout)
+	changedModPackages, err := git.GetGoModChangesFromDiff(gitModDiff.Stdout)
 	if err != nil {
 		log.Fatalf("Error getting go.mod changes: %v", err)
 	}
 
-	depGraph := golang.GetGoDepMap(packages)
+	depMap := golang.GetGoDepMap(packages)
 
-	// Find affected packages
-	affectedPkgs := map[string]bool{}
-	for _, pkg := range changedPackages {
-		p := golang.FindAffectedPackages(pkg, depGraph, false, config.Levels)
-		for _, p := range p {
-			affectedPkgs[p] = true
-		}
-	}
+	affectedPkgs := findAllAffectedPackages(config, changedPackages, changedModPackages, depMap)
 
-	for _, pkg := range modChangedPackages {
-		p := golang.FindAffectedPackages(pkg, depGraph, true, config.Levels)
-		for _, p := range p {
-			affectedPkgs[p] = true
-		}
-	}
-
-	o := ""
-	for k := range affectedPkgs {
-		o = fmt.Sprintf("%s %s", o, k)
-	}
-
-	if len(o) > 0 {
-		fmt.Println(o)
-	}
+	printAffectedPackages(affectedPkgs)
 }
 
-func MakeExecCalls(config *Config) (*cmd.Output, *cmd.Output, *cmd.Output) {
+func findAllAffectedPackages(config *Config, changedPackages, changedModPackages []string, depMap golang.DepMap) []string {
+	// Find affected packages
+	// use map to make handling duplicates simpler
+	affectedPkgs := map[string]bool{}
+
+	// loop through packages changed via file changes
+	for _, pkg := range changedPackages {
+		p := golang.FindAffectedPackages(pkg, depMap, false, config.Levels)
+		for _, p := range p {
+			affectedPkgs[p] = true
+		}
+	}
+
+	// loop through packages changed via go.mod changes
+	for _, pkg := range changedModPackages {
+		p := golang.FindAffectedPackages(pkg, depMap, true, config.Levels)
+		for _, p := range p {
+			affectedPkgs[p] = true
+		}
+	}
+
+	// convert map to array
+	pkgs := []string{}
+	for k := range affectedPkgs {
+		pkgs = append(pkgs, k)
+	}
+
+	return pkgs
+}
+
+func makeExecCalls(config *Config) (*cmd.Output, *cmd.Output, *cmd.Output) {
 	goList, err := golang.GoList()
 	if err != nil {
 		log.Fatalf("Error getting go list: %v", err)
@@ -128,4 +137,15 @@ func MakeExecCalls(config *Config) (*cmd.Output, *cmd.Output, *cmd.Output) {
 	}
 
 	return goList, gitDiff, gitModDiff
+}
+
+func printAffectedPackages(pkgs []string) {
+	o := ""
+	for _, k := range pkgs {
+		o = fmt.Sprintf("%s %s", o, k)
+	}
+
+	if len(o) > 0 {
+		fmt.Println(o)
+	}
 }

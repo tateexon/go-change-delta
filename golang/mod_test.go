@@ -67,9 +67,9 @@ func TestGetGoDepMap(t *testing.T) {
 func TestGetGoFileMap(t *testing.T) {
 	packages := []Package{
 		{
-			Dir:        "/User/t/git/go-change-delta/test",
+			Dir:        "C:\\User\\t\\git\\go-change-delta\\test",
 			ImportPath: "github.com/tateexon/go-change-delta/test",
-			Root:       "/User/t/git/go-change-delta",
+			Root:       "C:\\User\\t\\git\\go-change-delta",
 			Deps: []string{
 				"bytes",
 				"cmp",
@@ -84,9 +84,6 @@ func TestGetGoFileMap(t *testing.T) {
 			XTestGoFiles: []string{
 				"golang_test.go",
 			},
-			EmbedFiles: []string{
-				"testdata/blarg.json",
-			},
 		},
 		{
 			Dir:        "/User/t/git/go-change-delta/utils",
@@ -98,20 +95,39 @@ func TestGetGoFileMap(t *testing.T) {
 			GoFiles: []string{
 				"cmd.go",
 			},
+			EmbedFiles: []string{
+				"child/embed.json",
+			},
+		},
+		{
+			Dir:        "/User/t/git/go-change-delta/utils/child",
+			ImportPath: "github.com/tateexon/go-change-delta/utils/child",
+			Root:       "/User/t/git/go-change-delta",
+			Deps: []string{
+				"arg",
+			},
+			GoFiles: []string{
+				"child.go",
+			},
+			EmbedFiles: []string{
+				"embed.json",
+			},
 		},
 	}
 
 	t.Run("include test files", func(t *testing.T) {
 		fileMap := GetGoFileMap(packages, true)
-		require.Equal(t, 5, len(fileMap))
-		require.Equal(t, "github.com/tateexon/go-change-delta/test", fileMap["test/cmd.go"], fmt.Sprintf("%+v", fileMap))
-		require.Equal(t, "github.com/tateexon/go-change-delta/utils", fileMap["utils/cmd.go"], fmt.Sprintf("%+v", fileMap))
+		require.Equal(t, 6, len(fileMap))
+		require.Equal(t, "github.com/tateexon/go-change-delta/test", fileMap["test/cmd.go"][0], fmt.Sprintf("%+v", fileMap))
+		require.Equal(t, "github.com/tateexon/go-change-delta/utils", fileMap["utils/cmd.go"][0], fmt.Sprintf("%+v", fileMap))
+		require.Equal(t, "github.com/tateexon/go-change-delta/utils", fileMap["utils/child/embed.json"][0])
+		require.Equal(t, "github.com/tateexon/go-change-delta/utils/child", fileMap["utils/child/embed.json"][1])
 	})
 	t.Run("exclude test files", func(t *testing.T) {
 		fileMap := GetGoFileMap(packages, false)
-		require.Equal(t, 3, len(fileMap))
-		require.Equal(t, "github.com/tateexon/go-change-delta/test", fileMap["test/cmd.go"], fmt.Sprintf("%+v", fileMap))
-		require.Equal(t, "github.com/tateexon/go-change-delta/utils", fileMap["utils/cmd.go"], fmt.Sprintf("%+v", fileMap))
+		require.Equal(t, 4, len(fileMap))
+		require.Equal(t, "github.com/tateexon/go-change-delta/test", fileMap["test/cmd.go"][0], fmt.Sprintf("%+v", fileMap))
+		require.Equal(t, "github.com/tateexon/go-change-delta/utils", fileMap["utils/cmd.go"][0], fmt.Sprintf("%+v", fileMap))
 	})
 }
 

@@ -4,6 +4,6 @@ git/git.go
 git/git_test.go
 go.mod
 go.sum
-golang/mod.go
 testdata/gitdiff.txt
 utils/utils.go
+golang/embed.json

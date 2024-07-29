@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/tateexon/go-change-delta/cmd"
@@ -24,11 +23,7 @@ type Package struct {
 	EmbedFiles   []string `json:"EmbedFiles"`
 }
 
-type DepGraphItem struct {
-	ImportPath string
-	Root       string
-	GoFiles    []string
-}
+type DepMap map[string][]string
 
 func GoList() (*cmd.Output, error) {
 	return cmd.Execute("go", "list", "-json", "./...")
@@ -58,39 +53,39 @@ func ParsePackages(goList bytes.Buffer) ([]Package, error) {
 	return packages, err
 }
 
-func GetGoDepMap(packages []Package) map[string][]string {
-	depGraph := make(map[string][]string)
+func GetGoDepMap(packages []Package) DepMap {
+	depMap := make(map[string][]string)
 	for _, pkg := range packages {
 		for _, dep := range pkg.Deps {
-			depGraph[dep] = append(depGraph[dep], pkg.ImportPath)
+			depMap[dep] = append(depMap[dep], pkg.ImportPath)
 		}
 		for _, dep := range pkg.TestImports {
-			depGraph[dep] = append(depGraph[dep], pkg.ImportPath)
+			depMap[dep] = append(depMap[dep], pkg.ImportPath)
 		}
 		for _, dep := range pkg.XTestImports {
-			depGraph[dep] = append(depGraph[dep], pkg.ImportPath)
+			depMap[dep] = append(depMap[dep], pkg.ImportPath)
 		}
 	}
-	return depGraph
+	return depMap
 }
 
 //nolint:revive
-func GetGoFileMap(packages []Package, includeTestFiles bool) map[string]string {
-	// Build dependency graph
-	fileGraph := make(map[string]string)
+func GetGoFileMap(packages []Package, includeTestFiles bool) map[string][]string {
+	// Build dependency map
+	fileMap := make(map[string][]string)
 	for _, pkg := range packages {
-		addToGraph(pkg, pkg.GoFiles, fileGraph)
-		addToGraph(pkg, pkg.EmbedFiles, fileGraph)
+		addToMap(pkg, pkg.GoFiles, fileMap)
+		addToMap(pkg, pkg.EmbedFiles, fileMap)
 		if includeTestFiles {
-			addToGraph(pkg, pkg.TestGoFiles, fileGraph)
-			addToGraph(pkg, pkg.XTestGoFiles, fileGraph)
+			addToMap(pkg, pkg.TestGoFiles, fileMap)
+			addToMap(pkg, pkg.XTestGoFiles, fileMap)
 		}
 
 	}
-	return fileGraph
+	return fileMap
 }
 
-func addToGraph(pkg Package, files []string, fileGraph map[string]string) {
+func addToMap(pkg Package, files []string, fileMap map[string][]string) {
 	for _, file := range files {
 		separator := "/"
 		if strings.Contains(pkg.Root, "\\") {
@@ -102,15 +97,20 @@ func addToGraph(pkg Package, files []string, fileGraph map[string]string) {
 		if pkg.Dir == pkg.Root {
 			key = file
 		}
-		if _, exists := fileGraph[key]; exists {
-			log.Fatalf("why did this happen, duplicate key %s\nfile a bug\n", key)
+		// Multiple packages can embed the same file so we need to take that into account
+		if keys, exists := fileMap[key]; exists {
+			fileMap[key] = append(keys, pkg.ImportPath)
+		} else {
+			keys := []string{
+				pkg.ImportPath,
+			}
+			fileMap[key] = keys
 		}
-		fileGraph[key] = pkg.ImportPath
 	}
 }
 
 //nolint:revive
-func FindAffectedPackages(pkg string, depGraph map[string][]string, externalPackage bool, maxDepth int) []string {
+func FindAffectedPackages(pkg string, depMap DepMap, externalPackage bool, maxDepth int) []string {
 	visited := make(map[string]bool)
 	var affected []string
 
@@ -127,7 +127,7 @@ func FindAffectedPackages(pkg string, depGraph map[string][]string, externalPack
 		}
 		d := depthLeft - 1
 		if d != 0 {
-			for _, dep := range depGraph[p] {
+			for _, dep := range depMap[p] {
 				dfs(dep, d)
 			}
 		}
