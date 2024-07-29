@@ -1,3 +1,7 @@
 golang 1.22.5
 golangci-lint 1.59.1
 typos 1.23.3
+shfmt 3.8.0
+shellcheck 0.10.0
+python 2.7.18
+pre-commit 2.7.1
