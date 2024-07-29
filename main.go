@@ -107,7 +107,10 @@ func Run(config *Config, goList, gitDiff, gitModDiff *cmd.Output) {
 	for k := range affectedPkgs {
 		o = fmt.Sprintf("%s %s", o, k)
 	}
-	fmt.Println(o)
+
+	if len(o) > 0 {
+		fmt.Println(o)
+	}
 }
 
 func MakeExecCalls(config *Config) (*cmd.Output, *cmd.Output, *cmd.Output) {
