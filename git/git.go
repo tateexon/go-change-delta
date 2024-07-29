@@ -45,6 +45,9 @@ func GetChangedGoPackagesFromDiff(out bytes.Buffer, projectPath string, excludes
 	// Filter out non-Go files and directories and embeds
 	changedPackages := make(map[string]struct{})
 	for _, file := range changedFiles {
+		if file == "" {
+			continue
+		}
 		if strings.HasSuffix(file, ".go") && !shouldExclude(excludes, file) && strings.HasPrefix(file, projectPath) {
 			// get the import path from the file path
 			importPath := fileGraph[file]

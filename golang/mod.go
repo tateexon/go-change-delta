@@ -92,8 +92,16 @@ func GetGoFileMap(packages []Package, includeTestFiles bool) map[string]string {
 
 func addToGraph(pkg Package, files []string, fileGraph map[string]string) {
 	for _, file := range files {
-		path := strings.Replace(pkg.Dir, fmt.Sprintf("%s/", pkg.Root), "", 1)
+		separator := "/"
+		if strings.Contains(pkg.Root, "\\") {
+			// windows path replace
+			separator = "\\"
+		}
+		path := strings.Replace(pkg.Dir, fmt.Sprintf("%s%s", pkg.Root, separator), "", 1)
 		key := fmt.Sprintf("%s/%s", path, file)
+		if pkg.Dir == pkg.Root {
+			key = file
+		}
 		if _, exists := fileGraph[key]; exists {
 			log.Fatalf("why did this happen, duplicate key %s\nfile a bug\n", key)
 		}

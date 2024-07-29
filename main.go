@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 
+	"github.com/tateexon/go-change-delta/cmd"
 	"github.com/tateexon/go-change-delta/git"
 	"github.com/tateexon/go-change-delta/golang"
 )
@@ -39,7 +40,9 @@ func main() {
 
 	config := SetConfig(branch, projectPath, excludes, levels, includeTestDeps)
 
-	Run(config)
+	goList, gitDiff, gitModDiff := MakeExecCalls(config)
+
+	Run(config, goList, gitDiff, gitModDiff)
 }
 
 func SetConfig(branch, projectPath, excludes *string, levels *int, includeTestDeps *bool) *Config {
@@ -63,11 +66,7 @@ func SetConfig(branch, projectPath, excludes *string, levels *int, includeTestDe
 	}
 }
 
-func Run(config *Config) {
-	goList, err := golang.GoList()
-	if err != nil {
-		log.Fatalf("")
-	}
+func Run(config *Config, goList, gitDiff, gitModDiff *cmd.Output) {
 	packages, err := golang.ParsePackages(goList.Stdout)
 	if err != nil {
 		log.Fatalf("Error parsing packages: %v", err)
@@ -76,19 +75,11 @@ func Run(config *Config) {
 	fileGraph := golang.GetGoFileMap(packages, config.IncludeTestDeps)
 
 	var changedPackages []string
-	gitDiff, err := git.Diff(config.Branch)
-	if err != nil {
-		log.Fatalf("Error getting the git diff")
-	}
 	changedPackages, err = git.GetChangedGoPackagesFromDiff(gitDiff.Stdout, config.ProjectPath, config.Excludes, fileGraph)
 	if err != nil {
 		log.Fatalf("Error getting changed packages: %v", err)
 	}
 
-	gitModDiff, err := git.ModDiff(config.Branch, config.ProjectPath)
-	if err != nil {
-		log.Fatalf("Error getting the git mod diff")
-	}
 	modChangedPackages, err := git.GetGoModChangesFromDiff(gitModDiff.Stdout)
 	if err != nil {
 		log.Fatalf("Error getting go.mod changes: %v", err)
@@ -117,4 +108,21 @@ func Run(config *Config) {
 		o = fmt.Sprintf("%s %s", o, k)
 	}
 	fmt.Println(o)
+}
+
+func MakeExecCalls(config *Config) (*cmd.Output, *cmd.Output, *cmd.Output) {
+	goList, err := golang.GoList()
+	if err != nil {
+		log.Fatalf("Error getting go list: %v", err)
+	}
+	gitDiff, err := git.Diff(config.Branch)
+	if err != nil {
+		log.Fatalf("Error getting the git diff: %v", err)
+	}
+	gitModDiff, err := git.ModDiff(config.Branch, config.ProjectPath)
+	if err != nil {
+		log.Fatalf("Error getting the git mod diff")
+	}
+
+	return goList, gitDiff, gitModDiff
 }
