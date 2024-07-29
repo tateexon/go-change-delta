@@ -1,0 +1,7 @@
+diff --git a/go.mod b/go.mod
+index aaaaaaa..aaaaaaa 100644
+--- a/go.mod
++++ b/go.mod
+@@ -10 +10 @@ require (
+-	github.com/tateexon/go-change-delta v0.0.2
++	github.com/tateexon/go-change-delta v0.0.1

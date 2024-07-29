@@ -24,18 +24,9 @@ mkShell' {
     typos
   ];
 
-  GOROOT = "${go}/share/go";
   CGO_ENABLED = "0";
 
   shellHook = ''
-    # enable pre-commit hooks
-    # pre-commit install > /dev/null
-    # enable pre-push hooks
-    # pre-commit install -f --hook-type pre-push > /dev/null
-    # setup go bin for nix
-    export GOBIN=$HOME/.nix-go/bin
-    mkdir -p $GOBIN
-    export PATH=$GOBIN:$PATH
     # install gotestloghelper
     go install github.com/smartcontractkit/chainlink-testing-framework/tools/gotestloghelper@latest
   '';
