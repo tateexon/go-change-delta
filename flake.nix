@@ -9,7 +9,15 @@
   outputs = inputs@{ self, nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; overlays = [ ]; };
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ ];
+          config = {
+            permittedInsecurePackages = [
+              "python-2.7.18.8"
+            ];
+          };
+        };
       in rec {
         devShell = pkgs.callPackage ./shell.nix {
           inherit pkgs;
