@@ -24,7 +24,7 @@ repos:
     hooks:
       - id: run-unit-tests
         name: Run unit tests
-        entry: ./.githooks/run-unit-tests
+        entry: ./.githooks/run-unit-tests.sh
         language: script
         pass_filenames: false
         stages: [pre-push]
