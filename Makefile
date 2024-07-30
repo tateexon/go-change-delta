@@ -7,9 +7,6 @@ lint_fix:
 	golangci-lint run --fix
 
 test:
-	go test -timeout 5m ./...
-
-test_cover:
 	go test -timeout 5m -cover -covermode=count ./...
 
 build:

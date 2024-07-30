@@ -10,23 +10,42 @@ let
 in
 mkShell' {
   nativeBuildInputs = [
+    # basics
+    bash
     git
-    go
     curl
+    gnumake
+    jq
+    dasel
+    github-cli
+
+    # go
+    go
     go-mockery
     gotools
     gopls
     delve
     golangci-lint
-    github-cli
-    jq
-    dasel
+
+    # linting tools
     typos
+    pre-commit
+    python
+    shfmt
+    shellcheck
   ];
 
   CGO_ENABLED = "0";
 
   shellHook = ''
+    # Uninstall pre-commit hooks in case they get messed up
+    pre-commit uninstall > /dev/null || true
+    pre-commit uninstall --hook-type pre-push > /dev/null || true
+
+    # enable pre-commit hooks
+    pre-commit install > /dev/null
+    pre-commit install -f --hook-type pre-push > /dev/null
+
     # install gotestloghelper
     go install github.com/smartcontractkit/chainlink-testing-framework/tools/gotestloghelper@latest
   '';

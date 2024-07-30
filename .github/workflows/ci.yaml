@@ -1,0 +1,31 @@
+name: Lint
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  pre-commit:
+    name: Pre-commit checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the Repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0 # needed for pre-commit to work correctly
+      - name: Install Nix
+        uses: cachix/install-nix-action@ba0dd844c9180cbf77aa72a116d6fbc515d0e87b # v27
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+      - name: Run pre-commit checks
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          nix develop -c sh -c "\
+          git fetch origin ${BASE_REF}:${BASE_REF} &&\
+          git fetch origin ${HEAD_REF}:${HEAD_REF} &&\
+          gitdiffs=\$(git diff --name-only ${BASE_REF}...${HEAD_REF} | xargs) &&\
+          echo \"changed files: \$gitdiffs\" &&\
+          pre-commit run --hook-stage pre-push --show-diff-on-failure --color=always --files \${gitdiffs}"

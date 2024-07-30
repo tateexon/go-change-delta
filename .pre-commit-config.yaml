@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/tateexon/pre-commit-hooks
+    rev: db078105fc8d83f45efb47043c0d586b856b6108 # v0.0.1
+    hooks:
+      - id: go-lint
+      - id: go-mod-tidy
+      - id: detect-typos
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 2c9f875913ee60ca25ce70243dc24d5b6415598c # v4.6.0
+    hooks:
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: check-case-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+  - repo: local
+    hooks:
+      - id: run-unit-tests
+        name: Run unit tests
+        entry: ./.githooks/run-unit-tests.sh
+        language: script
+        pass_filenames: false
+        stages: [pre-push]
