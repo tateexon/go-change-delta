@@ -17,7 +17,7 @@ go-change-delta is a tool to detect the blast radius of changes in a Go-based re
 To install go-change-delta, you can use go install:
 
 ``` bash
-go install https://github.com/tateexon/go-change-delta@latest
+go install github.com/tateexon/go-change-delta@latest
 ```
 
 ## Usage
@@ -36,6 +36,14 @@ Run go-change-delta with the following flags:
     -t (optional): Include test dependencies. Default is true.
 
 ### Example
+
+With go test:
+
+```bash
+go test $(go-change-delta -b=origin/main -l=0)
+```
+
+This command checks all the go packages between your current branch and origin/main that are affected and runs their tests.
 
 ```bash
 go-change-delta -b main -p ./my-subproject -e "vendor,third_party" -l 3 -t false
