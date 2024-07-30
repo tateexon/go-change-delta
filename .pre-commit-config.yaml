@@ -1,9 +1,10 @@
 repos:
   - repo: https://github.com/tateexon/pre-commit-hooks
-    rev: ae90cefa2ad60cd90b16bab285751b2ad4a7e7a6 # v0.0.1
+    rev: db078105fc8d83f45efb47043c0d586b856b6108 # v0.0.1
     hooks:
       - id: go-lint
       - id: go-mod-tidy
+      - id: detect-typos
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 2c9f875913ee60ca25ce70243dc24d5b6415598c # v4.6.0
     hooks:
