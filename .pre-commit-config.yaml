@@ -20,3 +20,11 @@ repos:
       - id: trailing-whitespace
       - id: mixed-line-ending
         args: ['--fix=lf']
+  - repo: local
+    hooks:
+      - id: run-unit-tests
+        name: Run unit tests
+        entry: ./.githooks/run-unit-tests
+        language: script
+        pass_filenames: false
+        stages: [pre-push]
