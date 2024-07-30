@@ -1,0 +1,20 @@
+repos:
+  - repo: https://github.com/tateexon/pre-commit-hooks
+    rev: 66f4ed76cc118c0789705e975120594c37426b67 # v0.0.1
+    hooks:
+      - id: go-lint
+      - id: go-mod-tidy
+  # - repo: https://github.com/pre-commit/pre-commit-hooks
+  #   rev: 2c9f875913ee60ca25ce70243dc24d5b6415598c # v4.6.0
+  #   hooks:
+  #     - id: detect-private-key
+  #     - id: detect-aws-credentials
+  #       args: [--allow-missing-credentials]
+  #     - id: check-added-large-files
+  #     - id: check-json
+  #     - id: check-toml
+  #     - id: end-of-file-fixer
+  #     - id: check-case-conflict
+  #     - id: check-shebang-scripts-are-executable
+  #     - id: check-merge-conflict
+  #     - id: trailing-whitespace
