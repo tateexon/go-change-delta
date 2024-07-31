@@ -21,6 +21,7 @@ jobs:
         id: delta
         with:
           use-nix: 'true'
+          base-ref: ${{ github.base_ref || 'main' }}
       - name: Run Tests In Nix
         if: steps.delta.outputs.packages != ''
         run: nix develop -c sh -c "go test -timeout 5m -cover -covermode=count ${{ steps.delta.outputs.packages }}"
