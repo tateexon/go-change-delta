@@ -16,6 +16,8 @@ jobs:
           fetch-depth: 0 # needed for go-change-delta to work correctly
       - name: Load Nix
         uses: ./.github/actions/load-nix
+        with:
+          nix-flake-attribute: ".#ci-runtests"
       - name: Get previous commit SHA
         if: github.ref == 'refs/heads/main'  # Ensures this job only runs on pushes to main
         id: previous_commit
