@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 
@@ -38,6 +39,8 @@ func main() {
 	includeTestDeps := flag.Bool("t", true, "Should we include test dependencies. Default is true")
 	flag.Parse()
 
+	checkTools()
+
 	config := setConfig(branch, projectPath, excludes, levels, includeTestDeps)
 
 	goList, gitDiff, gitModDiff := makeExecCalls(config)
@@ -63,6 +66,22 @@ func setConfig(branch, projectPath, excludes *string, levels *int, includeTestDe
 		Excludes:        parsedExcludes,
 		Levels:          *levels,
 		IncludeTestDeps: *includeTestDeps,
+	}
+}
+
+// checkTools check if the required tools are installed in the path
+func checkTools() {
+	_, goErr := exec.LookPath("go")
+	_, gitErr := exec.LookPath("git")
+	toolsMissing := []string{}
+	if goErr != nil {
+		toolsMissing = append(toolsMissing, "go")
+	}
+	if gitErr != nil {
+		toolsMissing = append(toolsMissing, "git")
+	}
+	if len(toolsMissing) > 0 {
+		log.Fatalf("tools are missing from your path and may not be installed that are required to run this tool: %+v", toolsMissing)
 	}
 }
 
@@ -125,15 +144,15 @@ func findAllAffectedPackages(config *Config, changedPackages, changedModPackages
 func makeExecCalls(config *Config) (*cmd.Output, *cmd.Output, *cmd.Output) {
 	goList, err := golang.GoList()
 	if err != nil {
-		log.Fatalf("Error getting go list: %v", err)
+		log.Fatalf("Error getting go list: %v\nStdErr: %s", err, goList.Stderr.String())
 	}
 	gitDiff, err := git.Diff(config.Branch)
 	if err != nil {
-		log.Fatalf("Error getting the git diff: %v", err)
+		log.Fatalf("Error getting the git diff: %v\nStdErr: %s", err, gitDiff.Stderr.String())
 	}
 	gitModDiff, err := git.ModDiff(config.Branch, config.ProjectPath)
 	if err != nil {
-		log.Fatalf("Error getting the git mod diff")
+		log.Fatalf("Error getting the git mod diff: %v\nStdErr: %s", err, gitModDiff.Stderr.String())
 	}
 
 	return goList, gitDiff, gitModDiff
