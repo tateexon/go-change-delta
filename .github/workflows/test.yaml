@@ -1,0 +1,26 @@
+name: Test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    name: Run Go Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the Repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0 # needed for go-change-delta to work correctly
+      - name: Load Nix
+        uses: ./.github/actions/load-nix
+      - name: Get Affected Packages
+        uses: ./.github/actions/go-change-delta
+        id: delta
+        with:
+          use-nix: 'true'
+      - name: Run Tests In Nix
+        if: steps.delta.outputs.packages != ''
+        run: nix develop -c sh -c "go test -timeout 5m -cover -covermode=count ${{ steps.delta.outputs.packages }}"

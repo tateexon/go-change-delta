@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,6 +9,13 @@ import (
 	"github.com/tateexon/go-change-delta/golang"
 	"github.com/tateexon/go-change-delta/utils"
 )
+
+func verifySliceItemsPresent(t *testing.T, expected, actual []string) {
+	require.Equal(t, len(expected), len(actual), fmt.Sprintf("Expected: %+v\nActual: %+v\n", expected, actual))
+	for _, item := range expected {
+		require.Contains(t, actual, item)
+	}
+}
 
 func TestSetConfig(t *testing.T) {
 	config := setConfig(utils.Ptr("main"), utils.Ptr("abc"), utils.Ptr("abc,123"), utils.Ptr(1), utils.Ptr(true))
@@ -81,8 +89,10 @@ func TestFindAllAffectedPackages(t *testing.T) {
 
 		pkgs := findAllAffectedPackages(config, changedPackages, changedModPackages, depMap)
 		require.Equal(t, 2, len(pkgs))
-		require.Equal(t, "github.com/tateexon/go-change-delta/test", pkgs[0])
-		require.Equal(t, "github.com/tateexon/go-change-delta/two", pkgs[1])
+		verifySliceItemsPresent(t, []string{
+			"github.com/tateexon/go-change-delta/test",
+			"github.com/tateexon/go-change-delta/two",
+		}, pkgs)
 	})
 
 	t.Run("only changed go mod file", func(t *testing.T) {

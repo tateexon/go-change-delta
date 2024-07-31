@@ -51,6 +51,30 @@ go-change-delta -b main -p ./my-subproject -e "vendor,third_party" -l 3 -t false
 
 This command compares changes against the main branch, analyzes the project located at ./my-subproject, excludes the vendor and third_party directories, searches up to 3 levels of package dependencies, and excludes test dependencies from the analysis.
 
+## Github Action Example
+
+A github action has been provided at tateexon/go-change-delta/.github/actions/go-change-delta that will grab the packages delta and return it in the outputs. Example usage below:
+
+```yaml
+jobs:
+  test:
+    name: Run Go Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the Repo
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0 # needed for go-change-delta to work correctly
+      - name: Install golang and other environment stuff needed for your tests
+        ...
+      - name: Get Affected Packages
+        uses: tateexon/go-change-delta/.github/actions/go-change-delta
+        id: delta
+      - name: Run Test
+        if: steps.delta.outputs.packages != ''
+        run: go test ${{ steps.delta.outputs.packages }}
+```
+
 ## Contributing
 Contributions are welcome! Feel free to open an issue or submit a pull request.
 

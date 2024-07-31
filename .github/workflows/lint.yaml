@@ -14,10 +14,11 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0 # needed for pre-commit to work correctly
-      - name: Install Nix
-        uses: cachix/install-nix-action@ba0dd844c9180cbf77aa72a116d6fbc515d0e87b # v27
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
+      - name: Load Nix
+        uses: ./.github/actions/load-nix
+      - name: Validate Pre-Commit Config
+        shell: bash
+        run: nix develop -c sh -c "pre-commit validate-config"
       - name: Run pre-commit checks
         env:
           BASE_REF: ${{ github.base_ref }}
