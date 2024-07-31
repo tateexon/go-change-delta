@@ -18,11 +18,23 @@
             ];
           };
         };
-      in rec {
-        devShell = pkgs.callPackage ./shell.nix {
-          inherit pkgs;
-          scriptDir = toString ./.;  # This converts the flake's root directory to a string
+
+        scriptDir = toString ./.;  # Converts the flake's root directory to a string
+
+        # Importing the shell environments from separate files
+        fullEnv = pkgs.callPackage ./nix/devshell.nix {
+          inherit pkgs scriptDir;
         };
+
+        ciEnv = pkgs.callPackage ./nix/ci-runtests.nix {
+          inherit pkgs scriptDir;
+        };
+      in rec {
+        devShell = fullEnv;
+        devShells = {
+          ci-runtests = ciEnv;
+        };
+
         formatter = pkgs.nixpkgs-fmt;
       });
 }

@@ -22,6 +22,7 @@ jobs:
         with:
           use-nix: 'true'
           base-ref: ${{ github.base_ref || 'main' }}
+          nix-flake-attribute: ".#ci-runtests"
       - name: Run Tests In Nix
         if: steps.delta.outputs.packages != ''
-        run: nix develop -c sh -c "go test -timeout 5m -cover -covermode=count ${{ steps.delta.outputs.packages }}"
+        run: nix develop .#ci-runtests -c sh -c "go test -timeout 5m -cover -covermode=count ${{ steps.delta.outputs.packages }}"

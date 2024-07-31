@@ -2,13 +2,8 @@
 with pkgs;
 let
   go = pkgs.go_1_22;
-
-  mkShell' = mkShell.override {
-    # The current nix default sdk for macOS fails to compile go projects, so we use a newer one for now.
-    stdenv = if stdenv.isDarwin then overrideSDK stdenv "11.0" else stdenv;
-  };
 in
-mkShell' {
+mkShell {
   nativeBuildInputs = [
     # basics
     bash
@@ -51,8 +46,5 @@ mkShell' {
     export GOBIN=$HOME/.nix-go/bin
     mkdir -p $GOBIN
     export PATH=$GOBIN:$PATH
-
-    # install gotestloghelper
-    go install github.com/smartcontractkit/chainlink-testing-framework/tools/gotestloghelper@latest
   '';
 }

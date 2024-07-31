@@ -13,6 +13,10 @@ inputs:
     description: Should nix be used under the hood, requires this projects load-nix action
     required: false
     default: 'false'
+  nix-flake-attribute:
+    description: The nix flake attribute to select a specific environment to use for commands
+    required: false
+    default: ''
   base-ref:
     description: The base ref to compare results against, typically this is main
     required: false
@@ -24,11 +28,11 @@ inputs:
   path:
     description: The path to the root of the go module, if this is a a go module not at the root this is helpful
     required: false
-    default: ""
+    default: ''
   exclude:
     description: A comma separated list of paths to exclude from the checks
     required: false
-    default: ""
+    default: ''
   include-test:
     description: Should include test only package changes
     required: false
@@ -47,7 +51,7 @@ runs:
         if [ "${{ inputs.use-nix }}" == "false" ]; then
           go install github.com/tateexon/go-change-delta@${{ inputs.version }}
         else
-          nix develop -c sh -c "go install github.com/tateexon/go-change-delta@${{ inputs.version }}"
+          nix develop ${{inputs.nix-flake-attribute}} -c sh -c "go install github.com/tateexon/go-change-delta@${{ inputs.version }}"
         fi
     - name: Get Packages Delta
       id: delta
@@ -60,7 +64,7 @@ runs:
           git fetch origin ${BASE_REF}:${BASE_REF}
           packages=$(go-change-delta -b=${BASE_REF} -l=${{inputs.depth}} -p=${{inputs.path}} -e=${{inputs.exclude}} -t=${{inputs.include-test}})
         else
-          nix develop -c sh -c "git fetch origin ${BASE_REF}:${BASE_REF}"
-          packages=$(nix develop -c sh -c "go-change-delta -b=${BASE_REF} -l=${{inputs.depth}} -p=${{inputs.path}} -e=${{inputs.exclude}} -t=${{inputs.include-test}}")
+          nix develop ${{inputs.nix-flake-attribute}} -c sh -c "git fetch origin ${BASE_REF}:${BASE_REF}"
+          packages=$(nix develop ${{inputs.nix-flake-attribute}} -c sh -c "go-change-delta -b=${BASE_REF} -l=${{inputs.depth}} -p=${{inputs.path}} -e=${{inputs.exclude}} -t=${{inputs.include-test}}")
         fi
         echo "packages=${packages}" >> $GITHUB_OUTPUT
