@@ -1,5 +1,5 @@
 {
-  description = "chainlink-testing-framework development shell";
+  description = "development shell";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
