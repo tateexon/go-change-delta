@@ -1,0 +1,66 @@
+name: go-change-delta
+description: Get the go change delta for use in tests and flake checks
+inputs:
+  version:
+    description: The go-change-delta version you wish to use
+    required: false
+    default: latest
+  install:
+    description: Should we install go-change-delta
+    required: false
+    default: 'true'
+  use-nix:
+    description: Should nix be used under the hood, requires this projects load-nix action
+    required: false
+    default: 'false'
+  base-ref:
+    description: The base ref to compare results against, typically this is main
+    required: false
+    default: ${{ github.base_ref }}
+  depth:
+    description: The depth of recursion to check, 0 is default and infinite and will get all packages at any depth
+    required: false
+    default: '0'
+  path:
+    description: The path to the root of the go module, if this is a a go module not at the root this is helpful
+    required: false
+    default: ""
+  exclude:
+    description: A comma separated list of paths to exclude from the checks
+    required: false
+    default: ""
+  include-test:
+    description: Should include test only package changes
+    required: false
+    default: true
+outputs:
+  packages:
+    description: Affected Packages
+    value: ${{ steps.delta.outputs.packages || '' }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Install go-change-delta
+      if: inputs.install == 'true'
+      shell: bash
+      run: |
+        if [ "${{ inputs.use-nix }}" == "false" ]; then
+          go install github.com/tateexon/go-change-delta@${{ inputs.version }}
+        else
+          nix develop -c sh -c "go install github.com/tateexon/go-change-delta@${{ inputs.version }}"
+        fi
+    - name: Get Packages Delta
+      id: delta
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base-ref }}
+      run: |
+        packages=""
+        if [ "${{ inputs.use-nix }}" == "false" ]; then
+          git fetch origin ${BASE_REF}:${BASE_REF}
+          packages=$(go-change-delta -b=${BASE_REF} -l=${{inputs.depth}} -p=${{inputs.path}} -e=${{inputs.exclude}} -t=${{inputs.include-test}})
+        else
+          nix develop -c sh -c "git fetch origin ${BASE_REF}:${BASE_REF}"
+          packages=$(nix develop -c sh -c "go-change-delta -b=${BASE_REF} -l=${{inputs.depth}} -p=${{inputs.path}} -e=${{inputs.exclude}} -t=${{inputs.include-test}}")
+        fi
+        echo "packages=${packages}" >> $GITHUB_OUTPUT
