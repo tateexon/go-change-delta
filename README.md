@@ -1,5 +1,3 @@
-# WIP
-
 # go-change-delta
 
 go-change-delta is a tool to detect the blast radius of changes in a Go-based repository. It helps you identify which packages are affected by changes in your codebase, enabling more focused and efficient testing.
@@ -77,8 +75,3 @@ jobs:
 
 ## Contributing
 Contributions are welcome! Feel free to open an issue or submit a pull request.
-
-# TODO:
-
-- Setup and add CI
-- Add a github action to make using this easier in other CIs

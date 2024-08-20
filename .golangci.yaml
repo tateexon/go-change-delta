@@ -79,4 +79,4 @@ linters-settings:
       - name: atomic
 issues:
   exclude-dirs:
-    - examples
+    - .*/nix/store/.*
