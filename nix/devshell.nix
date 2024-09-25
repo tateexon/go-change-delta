@@ -1,8 +1,5 @@
-{ pkgs, scriptDir }:
+{ pkgs, scriptDir, go }:
 with pkgs;
-let
-  go = pkgs.go_1_22;
-in
 mkShell {
   nativeBuildInputs = [
     # basics
@@ -25,7 +22,7 @@ mkShell {
     # linting tools
     typos
     pre-commit
-    python
+    python3
     shfmt
     shellcheck
   ];
